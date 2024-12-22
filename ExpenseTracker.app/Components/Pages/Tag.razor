@@ -1,0 +1,30 @@
+﻿@page "/tag"
+@using Dapper
+@using ExpenseTracker.app.Service
+<MudText>Tag</MudText>
+<MudTextField T="string" Placeholder="Tag Name" @bind-Value="@TagName" />
+<MudButton OnClick="AddTag">Add</MudButton>
+@code {
+    [Inject] IDatabase database { get; set; }
+    public string TagName { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        //await database.CreateDatabaseTables();
+    }
+
+    private async Task AddTag()
+    {
+        try
+        {
+            var conn = database.GetSQLiteConnection();
+            string query = "INSERT INTO Tag(TagName, TagDescription) VALUES (@TagName, @TagDescription)";
+            var parameters = new { TagName = TagName, TagDescription = string.Empty };
+
+            await conn.ExecuteAsync(query, parameters);
+        } catch(Exception ex)
+        {
+            
+        }
+
+    }
+}
