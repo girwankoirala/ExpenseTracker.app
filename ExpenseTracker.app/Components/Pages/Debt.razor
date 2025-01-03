@@ -1,0 +1,61 @@
+﻿@page "/debt"
+@using ExpenseTracker.app.Model
+@using ExpenseTracker.app.Service
+@inject DatabaseService Database
+
+<MudContainer MaxWidth="MaxWidth.Medium" Style="margin-top: 20px;">
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h5">Add Debt</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudTextField @bind-Value="NewTransaction.Description" Label="Description" FullWidth="true" />
+            <MudTextField @bind-Value="NewTransaction.Amount" Label="Amount" Type="number" FullWidth="true" />
+            <MudButton OnClick="AddDebt" Variant="Variant.Filled" Color="Color.Primary" Style="margin-top: 10px;">
+                Add
+            </MudButton>
+        </MudCardContent>
+    </MudCard>
+    <MudDivider Class="my-4" />
+    <MudTable Items="@DebtTransactions" Striped="true" Dense="true">
+        <HeaderContent>
+            <MudTh>Description</MudTh>
+            <MudTh>Amount</MudTh>
+            <MudTh>Date</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Description</MudTd>
+            <MudTd>@context.Amount.ToString("C")</MudTd>
+            <MudTd>@context.Date.ToShortDateString()</MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private Transaction NewTransaction = new Transaction { Type = "Debt" };
+    private List<Transaction> DebtTransactions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDebtTransactions();
+    }
+
+    private async Task LoadDebtTransactions()
+    {
+        DebtTransactions = await Database.GetTransactionsAsync("Debt");
+    }
+
+    private async Task AddDebt()
+    {
+        // Ensure Amount is parsed correctly
+        NewTransaction.Amount = decimal.TryParse(NewTransaction.Amount.ToString(), out var amount) ? amount : 0;
+
+        await Database.AddTransactionAsync(NewTransaction);
+
+        // Reload the list after adding the new debt transaction
+        await LoadDebtTransactions();
+
+        // Clear the input fields
+        NewTransaction = new Transaction { Type = "Debt" };
+    }
+}
